@@ -3,3 +3,5 @@ Aim of the current project is in depth exploration to identify best ML model to 
 Many factors have been shown association with higher insurance price such as age, smoking status, pre-existing disease etc,. With these fators and features to help insurance company to predict insurance price with a much higher accuracy can help both Consumers and Companies.
 
 This ML Model can show us :- What should be the actual health insurance price for an individual or a family is an issue for many companies.?!
+
+Using R and LM() function try to see the influence of the variables on the insurance charges.
