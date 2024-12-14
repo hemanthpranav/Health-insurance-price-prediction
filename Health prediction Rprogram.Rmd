@@ -1,5 +1,5 @@
 ---
-title: "APPLIED STATISTICS FINAL PROJECT"
+title: "Health insurance charges Prediction"
 author: "Hemanth Pranav Malladi "
 date: "2024-10-28"
 output: html_document
