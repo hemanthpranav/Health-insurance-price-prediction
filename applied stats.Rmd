@@ -1,0 +1,970 @@
+---
+title: "APPLIED STATISTICS FINAL PROJECT"
+author: "Hemanth Pranav Malladi "
+date: "2024-10-28"
+output: html_document
+---
+
+<hr style="border: 5px dashed black; margin-top: 40px; margin-bottom: 40px;">
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+<span style="font-size:40px; color:gold;">**1. INTRODUCTION**:</span>
+
+This following Report wish to address and analyze the factors influencing Medical Insurance Costs Using Medical Insurance Cost Prediction data set.The medical insurance data set encompasses various factors influencing medical expenses, such as age, sex, BMI, smoking status, number of children, and region. This data set serves as a foundation for training machine learning models capable of forecasting medical expenses for new policyholders.
+
+The data set used contains 2772 observations with 7 variables. Each Observation with its attributes represents an Individual
+
+Demographic Information: AGE , SEX
+
+Health Metrics: BMI , Number of Children
+
+Lifestyle Factor: Smoker (Yes or No)
+
+Geographical Region: Northeast , Northwest ,Southeast or Southwest.
+
+Response Variable: Charges , which is the medical insurance cost charged to a individual.
+
+This dataset ensures we get a foundation to explore the influence of different factors on th emedical insurance costs
+
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+```
+
+
+```{r}
+
+data <- read.csv("C:/Users/rocky/Downloads/New folder/medical_insurance.csv")
+```
+```{r}
+head(data)
+summary(data)
+```
+
+
+```{r}
+df <- data
+df$sex <- factor(df$sex)
+df$smoker <- factor(df$smoker)
+df$region <- factor(df$region)
+
+
+```
+
+
+
+
+```{r}
+par(mfrow = c(1,3))
+boxplot(df$age, main = "Age")
+boxplot(df$bmi, main = "BMI")
+boxplot(df$children, main = "Children")
+par(mfrow = c(1,1))
+```
+
+
+```{r}
+head(df)
+```
+
+
+
+```{r}
+
+library(dplyr)
+
+
+continuous_vars <- dplyr::select(df, age, bmi, children, charges)
+
+
+cor_matrix <- cor(continuous_vars)
+
+
+print(cor_matrix)
+
+
+library(corrplot)
+corrplot(cor_matrix, method = "color", addCoef.col = "black", tl.cex = 0.8, title = "Correlation Matrix")
+```
+
+```{r}
+library(ggplot2)
+df %>% 
+  ggplot(aes(x = age, y = charges)) +
+  geom_point() +
+  labs(title = "Charges v Age",
+       x = "Age",
+       y = "Charges ($)")
+
+```
+```{r}
+shapiro.test(df$age)
+
+```
+```{r}
+plot(density(df$charges), main = "Density plot of charges")
+plot(density(log(df$charges)), main = "Density plot of charges (log)")
+```
+
+```{r}
+ggplot(data = df, aes(age, charges)) + geom_point() + geom_smooth() + ggtitle("Plot of Charges by Age")
+
+```
+
+
+```{r}
+ggplot(data = df, aes(age, charges)) + geom_point(aes(colour = factor(smoker))) + ggtitle("Plot of Charges by Age with Smoker")
+```
+
+
+```{r}
+ggplot(data = df, aes(bmi, charges)) + geom_point(colour = "green") + geom_smooth() + ggtitle("Plot of Charges by BMI")
+```
+
+<span style="font-size:20px; color:blue;">*The research aims to answer the following questions:*</span>
+
+  
+1)What are the primary factors driving medical insurance costs?
+
+2)How does smoking status impact medical insurance costs?
+
+3)Can we predict insurance costs for new individuals given their attributes?
+
+
+
+<span style="font-size:20px; color:blue;">*Response and Regressor variables*:</span>
+=
+Response Variable:- Charges : Quantitative
+
+Regressor Variable:- Age, sex (categorical), BMI, children, smoker (categorical), and region (categorical)
+
+Quantitative variables:- 
+    Age-Numeric
+    BMI-Numeric
+    Children-Numeric
+        
+Qualitative Variables:-
+    Sex- Categorical (Male or Female)
+    Smoker - Categorical (Yes,No)
+    Region - Categorical ("northeast," "northwest, "southeast," and "southwest")
+
+
+
+          
+<span style="font-size:20px">Linear model for Research Questions </span>
+
+$$
+\text{Charges} = \beta_0 + \beta_1 \cdot \text{Age} + \beta_2 \cdot \text{BMI} + \beta_3 \cdot \text{Smoker} + \beta_4 \cdot \text{Sex} + \beta_5 \cdot \text{Children} + \beta_6 \cdot \text{Region} + \epsilon
+$$
+Components of the model:
+
+Response Variable: Charges
+
+Predictors: AGE , BMI , SEX, CHILDREN ,REGION , SOMKER
+
+Error term: this term will capture random variation
+
+
+<hr style="border: 5px solid black; margin-top: 40px; margin-bottom: 40px;">
+
+<span style="font-size:40px; color:gold;">**2. Regression analysis.**:</span>
+
+  
+<span style="font-size:20px; color:blue;">*Least square estimates.*:</span>
+
+```{r}
+
+
+data_model <-  lm(charges ~ age+ bmi + smoker+ sex + children + region, data = df)
+
+
+summary(data_model)
+```
+
+```{r}
+str(df)
+
+```
+
+*Observations: *
+
+AGE: This variable is Statistically significant as p value is less than 0.01. We can say the insurance costs will increase by 255.577 dollars for every year
+
+BMI: As p-value is less than 0.01 , BMI is also statistically significant and each BMI increase will raise the insurance costs by 330.015 dollars
+
+Children: Children are highly significant as the p value is very less and having a additional child will increase or add 506.3 dollars to the insurance cost.
+
+Smoker Status: Smoking can increase the costs by whopping 23,976 dollars making it significant variable.
+
+SEX: This seems to be not a significant vriable as p-value is more than 0.01 (p-value of SEX = 0.806)
+
+Region: Out of the three regions , South east and South West have low p value and therefore more significant than Northeast.
+
+
+
+
+
+
+
+
+
+
+
+<span style="font-size:20px; color:blue;">*Hypothesis testing of regression and of individual slope parameters:*</span>
+
+<span style="font-size:20px; color:blue;">1.Main Hypothesis Test - Overall Regression Model.:</span>     
+
+
+To test if any or atleast one of the regressor variable has a significant relationship with the response variable. 
+We can do this using F-statistic.
+
+    Null Hypothesis for overall model :
+  $$H_0 : \beta_1 = \beta_2 ... = \beta_k = 0$$
+  This means none of the regressor has an effect on the response Variable.
+
+    Alternative Hypothesis:
+   $$ H_1 : \text{At least one } \beta_i \neq 0$$
+   
+Here we assume atleast one Regressor has a Significant Effect on Medical Charges.
+
+
+
+```{r}
+
+anova(data_model)
+
+```
+
+```{r}
+summary(data_model)$coefficients
+
+```
+**Global Hypothesis Test (ANOVA Table)**
+
+*Interpretation:*
+
+The f statistic with the p-value less than 0.01 suggests that the predictors or the variables that guide the response explains a significant prportion of the variabilty of the response variable.
+
+
+*Individual Hypothesis Testing(via t-tests):*
+
+
+*Significant Predictors:*
+
+-Age 
+ Has p value less than 0.001 and a positive coefficient of 261 means that for each increase in year of age the charges increasse by $262.
+ 
+-BMI: It is significant
+
+-Children
+ Has p value less than 0.001 and a positive coefficient of 525 which means having more children can increase the medical insurance price.
+ 
+-Smoker(yes)
+ Has p value less than 0.001 and a negative coefficient of -20467.67 indicates charges for smokers are $20,000 higher.
+ 
+-Region:
+souteast p-value is < 0.001 , southwest p value < 0.001 
+
+
+.
+ 
+
+*Non-Significant Predictors:*
+
+-Sex (male) 
+ p-value is 0.932 and there is no difference in charges between males and females
+ 
+-REGION(northwest) have p-value of 3.210863e-01 making it not significant
+
+
+Similar to above Main hypothesis test we test both Null and Alternative Hypothesis
+
+
+
+
+    
+**Final Conclusion: **
+
+Variables that effect the Charges: AGE ,BMI,  CHILDREN , SMOKING STATUS , REGION(souteast,southwest) 
+
+
+
+<span style="font-size:20px; color:blue;">
+3.Identifying New Regressors and finding its Confidence and Prediction Intervals.:</span>     
+
+Let consider the following new regressor values for a "SMOKER"
+
+ AGE = 47
+ BMI = 31
+ CHILDREN = 3
+ SEX =Female
+ Region = Southeast
+ 
+Now to calculate the confidence and presiction intervals.
+
+```{r}
+new_reg <- data.frame(
+  age = 47,
+  bmi = 31,
+  children = 3,
+  smoker = "yes",
+  sex = "male",
+  region = "southeast"
+)
+```
+
+```{r}
+confidence <- predict(data_model, newdata = new_reg, interval = "confidence")
+prediction <- predict(data_model, newdata = new_reg, interval = "prediction")
+
+confidence
+prediction
+```     
+- We see a narrow "CONFIDENCE INTERVAL".
+The fit shows estimates of mean for a specific combo of predictors
+Provides a range in which it is 95% confident the mean charge lie between it. Therfore the mean insurance is estimated at 34,967 dollars that has a range of 34,221 to 35,713 dollars. This demonstrates that the model is confident in estimating the mean.
+
+- We see a Wide "PREDICTION INTERVAL".
+Here the fit represents insurance charge for a single individual. This means even with people of same characteristics the insurance price varies.
+
+<span style="font-size:20px">*Statistical inference analyses.*:</span>   
+
+<span style="border-bottom: 3px solid black;">**Testing for the subset**</span>
+
+
+Null hypothesis ho :the coefficients are all zero , which is subset of predictors has no significant impact on the insurance price
+Ho i.e Null hypothesis  is bmi and age = 0 , which means BMI and age have no effect on insurance charges.
+
+Alternative hypothesis h1 : Assuming one predictor has an impact
+
+
+Let see if Bmi and age has no effect on charges
+
+
+`
+
+```{r}
+
+library(car)
+linearHypothesis(data_model, c("bmi = 0", "age = 0"))
+
+```
+*Observation:*
+
+F-statistic of 689.32 and small p-value indicate the RSS reduction seems to be significant statistically.
+
+This means BMI and AGE are very important predictors that can improve the model to explain any variation
+
+Therefore, We reject the Null Hypothesis.
+
+Both the variables need to be retained in the model.
+
+
+
+<span style="border-bottom: 3px solid black;">**SIMULTANEOUS INFERENCE**</span>
+
+
+Using Bonferroni Intervals. i.e 0.95
+
+```{r}
+
+confint(data_model, level = 0.95)
+
+```
+*Observations:*
+
+The table above provides 95% Bonferroni Confidence intervals
+
+AGE:- This has positive effect with additional year the charges increase from 239 dollars to 271 dollars.
+
+Sex:- Since this interval has zero , there wont be significant difference.
+
+BMI:- Like age it has positive effect with every unit increase of bmi increases the insurance charges from 291 dollars to 368 dollars.
+
+Children: Additional children can increase the charges from 319 dollars to 692 dollars.
+
+Smoker: Being a Smoker increases cost of insurance from 23410 to 24541 dollars. Since the amount of charges is huge this predictor is highly important and significant.
+
+Region: Only regions without zero in the interval are Southeast and Sountwest and both of these charges are lower than Northeast
+
+*FINAL:- *
+
+Age,BMI,Smoker,Southeast and Soutwest regions are significant and their contribution is important
+
+
+<span style="border-bottom: 3px solid black;">**Categorical Variable Inference**</span>
+
+
+Let us take SMOKER variable.
+
+Null Hypothesis being Mena insurance for smokers and non smokers are equal.
+
+Alternate Hypothesis is they are not equal.
+
+We use Welch T test 
+
+
+```{r}
+t.test(df$charges ~ df$smoker)
+
+```
+*Observation:*
+
+t-statistic -47,445 being a large t-value shows a significant difference between the groups.Since p-VALUE is effectively zero we can reject the NULL HYPOTHESIS.
+
+Smoking Status Strongly Impacts Insurance charges. Smokers mean charges are 32223 dollars compared to non-smoker's 8,417 dollars, indicating smoking status has strong impact on insurance charges.
+
+```{r}
+
+ggplot(df, aes(x = smoker, y = charges, fill = smoker)) +
+  geom_violin(trim = FALSE) +
+  geom_boxplot(width = 0.5, fill = "blue", outlier.shape = NA) +
+  labs(title = "Insurance Charges Smoking and Status",
+       x = "Smoking Status",
+       y = "Insurance Charges") +
+  theme_minimal() +
+  scale_fill_manual(values = c("yellow", "cyan"))
+```
+
+
+As you can infer how smoking status effect on charges are.
+
+
+
+<hr style="border: 5px solid black; margin-top: 40px; margin-bottom: 40px;">
+
+
+<span style="font-size:40px; color:gold;">**3. Model diagnostics.**:</span>
+
+<span style="border-bottom: 3px solid black;">**a) Residuals.**</span>
+
+
+We need to check 3 types.
+     Raw Residuals 
+     Internally Studentized 
+     Externally studentized
+```{r}
+
+shapiro.test(data_model$residuals)
+```
+```{r}
+raw_residuals <- residuals(data_model)
+internal <- rstudent(data_model)
+external <- rstudent(data_model)
+
+plot(fitted(data_model), raw_residuals,
+ main = "Raw Residuals vs Fitted Values",
+ xlab = "Fitted Values", ylab = "Raw Residuals", pch = 18, col = "gold")
+abline(h = c(-2, 2), lty = 2, col = "red")
+
+plot(fitted(data_model), internal,
+ main = "Internally Studentized Residuals vs Fitted Values",
+ xlab = "Fitted Values", ylab = "Internally Studentized Residuals", pch = 19, col = "cyan")
+abline(h = c(-2, 2), lty = 2, col = "red")
+
+plot(fitted(data_model), external,
+ main = "Externally Studentized Residuals vs Fitted Values",
+ xlab = "Fitted Values", ylab = "Externally Studentized Residuals", pch = 19, col = "green",)
+abline(h = c(-2, 2), lty = 2, col = "red")
+```
+
+Observations:
+
+*Raw Residuals:*
+Raw Residuals are the differences between observed and Predicted Values.
+ The points scatter around zero but we see some residuals increase with fitted values. Therfore there is some Non constant variance. This can indicate heteroscedasticity. But this also violates asumption of homoscedaticity . So we need to transform the dependent variable.
+ 
+*Internally Studentized:*
+
+Most are within -2 to 2 and some residuals outside  3 or -3 are outliers
+
+*Externally Studentized:*
+
+Similar we can see some extreme residuals which are above 3 , these points may be influencial.Points which deviate above[-3,3] can be outliers.We need to use leverage or cooks distance to futher evaluate
+ 
+
+ 
+
+
+<span style="border-bottom: 3px solid black;">**b) Leverage and influence**</span>
+
+To identify "Leverage" ,"Influential" and "Outliers" points:
+
+
+
+<span style="border-bottom: 3px solid black;">*Leverage:*</span>
+```{r}
+Leverage <- hatvalues(data_model)
+
+high_leverage_points <- which(Leverage > 2 * mean(Leverage))
+plot(Leverage ,ylab = "Leverage",xlab = "Observation Index",pch = 20,col = "gold")
+abline(h = 2 * mean(Leverage), col = "red", lty = 2) 
+
+```
+
+
+<span style="border-bottom: 3px solid black;">*Influencial:*</span>
+```{r}
+cooks_distance <- cooks.distance(data_model) 
+high_points <- which(cooks_distance > 4 / nrow(df))
+plot(cooks_distance,ylab = "Cook's Distance",xlab = "Observation Index",pch = 19,col = "blue")
+abline(h = 4 / nrow(df), col = "red", lty = 2)
+```
+```{r}
+head(high_points)
+
+```
+
+
+
+<span style="border-bottom: 3px solid black;">*Outliers:*</span>
+```{r}
+outliers <- which(abs(external) > 2)
+head(outliers)
+plot(fitted(data_model),external,xlab = "Fitted Values", ylab = "Studentized Residuals", pch = 20, col = "pink")
+abline(h = c(-2, 2), col = "red", lty = 2) 
+
+```
+
+
+
+
+
+Leverage points (threshold is the leverage value greater than 2p/n, where p is the number of predictors and n is number of observations. when is larger it is considerd high leverage)
+ - We have 168 out of 27000 observations. This exceeds the threshold for leverage. However this may not be so significant unless it combined with influence or outier.
+ 
+Influencial Points.
+- Cook's distance value which exceeds 1 are generally considered influential.
+- Number of influence points is zero. Therfore none of the data unduly impact the model.
+
+Outliers.
+- There 100 observations the exceed the studentized residuals.
+- But these can be due to extreme behaviours in response variables for example: SMoking and high BMI can effect these points.
+
+
+
+<span style="font-size:20px; color:blue;">*Model assumptions*</span>
+
+
+<span style="border-bottom: 3px solid black;">*Linearity*</span>
+
+
+```{r}
+plot(fitted(data_model), residuals(data_model),main = "Residuals vs Fitted Values ",xlab = "Fitted Values", ylab = "Residuals", pch = 19, col = "gold")
+abline(h = 0, col = "red", lty = 2)
+
+```
+There seems to be non random patterns in residuals and indicating a posibity of non- linear relationship.
+
+Lets use Generalised Additive model to Remedy the assumption
+
+
+```{r}
+
+library(mgcv)
+
+
+gam_model <- gam(charges ~ s(age) + s(bmi) + children + smoker + 
+                   region, data = df)
+
+
+summary(gam_model)
+
+
+```
+```{r}
+plot(gam_model, 
+     se = TRUE,               
+     rug = TRUE,               
+     pages = 1,                
+     scheme = 1,               
+     main = "Generalized Additive Model Plots")
+```
+Gam plot visualise the smooth functions that can be fitted to predictors especially age and BMI
+
+Relation of age and charges are linear but hasa slight curve at lower end. Most data points are concentrated between ages 20 and 60.
+
+Relation of Bmi and charges is non linear as bmi increases to 30 charges increase sharply and this indicates obesity incur high medical insurance charges.
+
+No this remedy didnt inherently brought linearity to all variables but we can futher do cross validation test for the predictive accuracy of the GAM model.
+
+
+
+
+<span style="border-bottom: 3px solid black;">*INDEPENDENCE ASSUMPTION*</span>
+
+```{r}
+
+
+library(lmtest)
+dwtest(data_model)
+acf(residuals(data_model))
+
+```
+
+The Durbin-Watson Test  of 2.078 indicates no autocorrelation.
+Since 0 indicates positive and 4 negative autocorrelation.
+
+p-value > 0.05 no evidence to reject the null hypothesis. therefore no autocorrelation in the residuals.
+
+
+
+<span style="border-bottom: 3px solid black;">*MULTICOLLINEARITY*</span>
+
+VIF LESS THAN 5 IS NOT A CONCERN.
+
+```{r}
+library(car)
+vif(data_model)
+```
+Most variables have low value confirming no Multicollinearity Concerns.
+
+Therfore the model does not exhibit Multicollinearity and NO FUTHER REMEDIES ARE NECESSARY.
+
+<hr style="border: 5px solid black; margin-top: 40px; margin-bottom: 40px;">
+
+<span style="font-size:40px; color:gold;">**4. Model Selection.**:</span>
+
+```{r}
+head(df)
+```
+
+
+```{r}
+
+model_d <- df
+model_d<- model_d%>%
+  mutate(region_northwest = ifelse(region == "northwest", 1, 0),
+         region_southeast = ifelse(region == "southeast", 1, 0),
+         region_southwest = ifelse(region == "southwest", 1, 0)) 
+
+```
+
+*Model 1 *
+
+Let us consider just age , bmi , smoker
+
+```{r}
+M1 <- lm(charges ~ age + bmi + smoker, data = model_d)
+```
+
+*Model 2*
+
+Let us consider Age , BMI , SMOKER ,Children, southeast and southwest
+
+```{r}
+M2 <- lm(charges ~ age + bmi + smoker + children + region_southeast + region_southwest,data = model_d)
+
+```
+
+
+*Model 3*
+
+Let us use the full model
+
+```{r}
+M3 <- lm(charges ~ age + bmi + children + sex + smoker +
+                 region_northwest + region_southeast + region_southwest, data = model_d)
+```
+
+Now
+
+<span style="border-bottom: 3px solid black;">*MODEL SELECTION CRITERIA*</span>
+
+
+```{r}
+predictors <- c("age", "bmi", "children", "sex", "smoker", "region")
+
+a_r2 <- c(
+  M1 = summary(M1)$adj.r.squared,
+  M2 = summary(M2)$adj.r.squared,
+  M3 = summary(M3)$adj.r.squared
+)
+
+
+aic <- c(
+  M1 = AIC(M1),
+  M2 = AIC(M2),
+  M3 = AIC(M3)
+)
+
+
+bic <- c(
+  M1 = BIC(M1),
+  M2 = BIC(M2),
+  M3 = BIC(M3)
+)
+
+ 
+
+ 
+press <- function(data_model) {
+  sum((residuals(data_model) / (1 - lm.influence(data_model)$hat))^2)
+}
+press_values <- c(
+  M1 = press(M1),
+  M2 = press(M2),
+  M3 = press(M3)
+)
+
+
+result_model <- data.frame(
+  Model = c("M1", "M2", "M3"),
+  Adj_R2 = a_r2,
+  AIC = aic,
+  BIC = bic,
+  PRESS = press_values
+)
+
+
+result_model
+```
+
+Adjusted R SQUARE:
+
+Model 2 has highest value 0.7503 which explains the proportion of variance .
+
+AIC( AKAIKE INFORMATION CRITERION)
+
+Since Aic penalizes model complexity , lower value is preferred.
+Therefore MODEL 2 is better than M1 AND M3 as it balances the goodness of fit
+
+BIC (BAYESIAN INFORMATION CRITERION)
+
+This puts more penalty than AIC , therefore this also lower value is preferred. 
+
+Model 2 has tge lowest value and it is preffered.
+
+PRESS(PREDICTION ERROR SUM OF SQUARES)
+
+Since this measures Prediction Error , lower value is preffered.
+
+Model 2 has lowest press value out of three models
+
+FINAL OBSERVATION:
+
+Based on all criteria Model 2 which has predictors such as age , bmi , smoking , children , region(southeast , southwest) is the best model.
+
+
+<span style="border-bottom: 3px solid black;">*SUBSET AND BACKWATD ELIMINATION*</span>
+
+```{r}
+library(leaps)
+regsubsets_obj <- regsubsets(charges ~ age + bmi + children + sex + smoker +
+                 region_northwest + region_southeast + region_southwest, data = model_d, nvmax = length(predictors))
+subset_summary <- summary(regsubsets_obj)
+
+
+adj_r2 <- subset_summary$adjr2
+cp <- subset_summary$cp
+
+
+best_adj_r2 <- which.max(adj_r2)
+
+
+best_cp <- which.min(cp)
+
+
+cat(" model based on Adjusted R^2 i:\n")
+print(names(coef(regsubsets_obj, best_adj_r2)))
+
+cat("\n model based on Cp :\n")
+print(names(coef(regsubsets_obj, best_cp)))
+```
+
+```{r}
+library(MASS)
+full_model <- lm(charges ~ age + bmi + children + sex + smoker +
+                 region_northwest + region_southeast + region_southwest ,data = model_d)
+backward_model <- stepAIC(full_model, direction = "backward", trace = FALSE)
+
+
+cat("model from backward elimination :\n")
+print(summary(backward_model))
+
+
+cat("\nAIC of the final model:\n")
+print(AIC(backward_model))
+
+```
+
+```{r}
+
+a_r2 <- c(
+  M1 = summary(M1)$adj.r.squared,
+  M2 = summary(M2)$adj.r.squared,
+  M3 = summary(M3)$adj.r.squared
+)
+
+
+aic_values <- c(
+  M1 = AIC(M1),
+  M2 = AIC(M2),
+  M3 = AIC(M3)
+)
+
+
+comparison <- data.frame(
+  Model = c("M1", "M2", "M3"),
+  Adj_R2 = a_r2,
+  AIC = aic_values
+)
+
+print(comparison)
+
+
+best_r2_model <- names(which.max(a_r2))
+best_aic_model <- names(which.min(aic_values))
+
+cat("\nBest model based on Adjusted R^2:\n", best_r2_model)
+cat("\nBest model based on AIC:\n", best_aic_model)
+```
+
+From THE Above anlaysis we can confirm Model 2 is the best model.
+
+
+<hr style="border: 5px solid black; margin-top: 40px; margin-bottom: 40px;">
+
+<span style="font-size:40px; color:gold;">**5.ANALYSIS**:</span>
+
+
+<span style="border-bottom: 3px solid black;">*RESEARCH QUESTIONS:*</span>
+
+YES ,My Exploratory data Analysis and other methods have effectively give reasonable answers to my Reasarch Questions.
+
+1. What Factors Most Significantly Influence Medical insurance Costs?
+
+Let us Take the Model 2 which was the best fit Model.
+
+AGE , BMI , SMOKING STATUS ,CHILDREN , AND REGION (SOUTHEAST AND SOUTHWEST) have less p-value and are more Statistically significant.
+
+
+2. How does Smoking status impact insurance costs?
+
+As seen from T-test , there was a large difference in charges between smoker and non smokers
+
+Being a Smoker increases cost of insurance from 23410 to 24541 dollars. Since the amount of charges is huge this predictor is highly important and significant.
+ 
+ Therfore Smoking Status has a significant Impact on Medical insurance costs
+ 
+
+3. Can we Predict Medical Insurance Costs For new Indivduals given their attributes?
+
+This model can predict Medical Insurance charges for new Individuals based on given attributes. 
+The prediction Interval show a range from 23035.03 to 46899.08 dollars where the future insurance costs are expected to fall for a new dataset : age = 47,bmi = 31,children = 3,smoker = "yes",sex = "male",region = "southeast" . 
+Therefore , it can predict the charges for a new person.
+
+
+<span style="border-bottom: 3px solid black;">*LIMITATIONS:*</span>
+
+
+-Linearity:  The main residual vs fitted plot showed some non-linearity in the relation of response with the predictors. This may lead to biased results. 
+
+-Influential Points and Outliers: As from the cook's distance and standardized residuals we can see some outliers and influencial pomiys . This can effect the final model results.
+
+- Categorical Variables:  We treat them assuming their effects are linear. But their might be more Complex Interactions which we need to incorporate that can better give a optimized model
+
+- HOMOSCEDASTICITY: Before any Transformation the residual Plots show Heteroscedasticity. 
+
+
+<span style="border-bottom: 3px solid black;">*IMPROVEMENTS:*</span>
+
+
+-We need to transform the variables using log or Box-cox transformation to better capture the non-linear terms
+
+- To reduce the Influencial Points we need to use robust regression Techniques and if these points are not valuable to the dataset we need to remove them
+
+- Incorporating Interaction effects to better explore Categorical variables impact on Continous variables which can capture Complex Relations
+
+-To adjust for Non constant Variance we need to consider Weighted Least Squares regression (WLS) to stabilize the variance
+
+-Need to Perform K-fold cross Validation to help prevent overfitting and reduce noise in the dataset.
+
+
+<span style="border-bottom: 3px solid black;">*CONCLUSION OF THE ABOVE DATA ANALYSIS.*</span>
+
+
+Predicting Medical Insurance charges can help insurance companies charge appropriate amounts for the variables selected. A Right model can help charge the right Premiums without over charging the Customers. 
+
+The Above analysis tries to understand which factors help influencing the Medical Insurance Charges using Linear Regression Techniques. We need find Limitations in the model especially with Non-Linearity , influential points etc but these can be transformed using BOX-COX etc With Durban-Watson Test we have Confirmed the Independence Assumption was met.
+
+To further refine the model we can use regularization techniques and cross validation to prevent over fitting and explore the non linear relations that can capture more complex relations.
+
+In the end, This linear model provides useful insights regarding which predictors effect the final model and help prediction the medical insurance charges.
+
+
+<hr style="border: 5px solid black; margin-top: 40px; margin-bottom: 40px;">
+
+<span style="font-size:40px; color:gold;">**6.Futher Analysis**:</span>
+
+
+The dataset is has non constant variance.
+
+```{r}
+
+plot(data_model$fitted.values, resid(data_model),
+     main = "Residuals vs. Fitted Values",
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     pch = 19, col = "cyan")
+abline(h = 0, col = "red", lty = 2)
+
+```
+
+There appears to be a fanning pattern and indicating Heteroscedasticity (non-constant variance)
+
+
+Let's use Robust regression.
+
+```{r}
+robust <- rlm(charges ~ age + bmi + children + sex + smoker + 
+                      region_northwest + region_southeast + region_southwest, data = model_d)
+
+
+summary(robust)
+
+```
+Residual standard error is 986.9 which is smaller compared to ols which shows it's effectiveness to outliers.
+Here to smokinh significantly effects insurance costs
+
+
+Lets Compare OLS and Robust Regression
+```{r}
+
+ols <- lm(charges ~ age + bmi + children + sex + smoker + 
+                  region_northwest + region_southeast + region_southwest, data = model_d)
+
+comparison <- data.frame(
+  Predictor = names(coef(ols)),
+  OLS = coef(ols),
+  Robust = coef(robust)
+)
+
+
+comparison
+
+```
+Intercept for both ols and robust is -11635 and -4853 which shows robust has reduced the influence of outliers
+
+```{r}
+model_d$ols_residuals <- resid(ols)
+model_d$robust_residuals <- resid(robust)
+
+ggplot(model_d, aes(x = charges)) +
+  geom_point(aes(y = ols_residuals), color = "cyan", alpha = 0.5) +
+  geom_point(aes(y = robust_residuals), color = "red", alpha = 0.5) +
+  labs(title = "OLS vs. Robust Regression",
+       x = "Observed Charges",
+       y = "Residuals") +
+  theme_minimal() +
+  scale_color_manual(name = "Model", values = c("cyan", "red"))
+```
+
+Robust regression reduces the impact of heteroscedasticity which is less sensitive to outliers and variable spread.
+
+But It still does not fix the constant variance assumption explicitly , we may have to try other methods like WLS to futher Transform the data.
+
